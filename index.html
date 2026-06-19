@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vectorizator — convierte el texto de tus PDFs en curvas</title>
+<meta name="description" content="App de Mac que vectoriza el texto de tu PDF para poder editarlo sin necesidad de tener las fuentes instaladas. Procesado 100% local, sin servidor, sin tracking." />
+<meta property="og:title" content="Vectorizator" />
+<meta property="og:description" content="Convierte el texto de tu PDF en curvas. App de Mac, 100% local." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://vectorizator.com" />
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml" />
+<style>
+  :root{
+    --bg:#f6f9fc;
+    --bg-soft:#f7fafc;
+    --card:#ffffff;
+    --ink:#0a2540;
+    --ink-soft:#425466;
+    --ink-mute:#697386;
+    --line:#e3e8ee;
+    --line-strong:#cfd7df;
+    --accent:#635bff;
+    --accent-hover:#5048e5;
+    --accent-soft:#f0eefe;
+    --radius:8px;
+    --radius-lg:14px;
+    --shadow-sm:0 2px 5px 0 rgba(60,66,87,.06), 0 1px 1px 0 rgba(0,0,0,.04);
+    --shadow:0 7px 14px 0 rgba(60,66,87,.10), 0 3px 6px 0 rgba(0,0,0,.06);
+    --shadow-lg:0 20px 60px rgba(50,50,93,.12), 0 8px 16px -8px rgba(0,0,0,.08);
+    --font:-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --container:1180px;
+    --container-narrow:760px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;background:var(--card);color:var(--ink);
+    font-family:var(--font);font-size:16px;line-height:1.55;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  }
+  a{color:var(--accent);text-decoration:none;}
+  a:hover{text-decoration:underline;}
+  img,video{max-width:100%;display:block;}
+
+  .container{max-width:var(--container);margin:0 auto;padding:0 32px;}
+  .container.narrow{max-width:var(--container-narrow);}
+
+  /* NAV */
+  .nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(255,255,255,.85);
+    backdrop-filter:saturate(180%) blur(20px);
+    -webkit-backdrop-filter:saturate(180%) blur(20px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-inner{
+    display:flex;align-items:center;justify-content:space-between;
+    max-width:var(--container);margin:0 auto;padding:18px 32px;
+  }
+  .wordmark{
+    display:flex;align-items:center;gap:10px;
+    font-weight:600;font-size:14px;letter-spacing:.14em;
+    color:var(--ink);text-decoration:none;
+  }
+  .wordmark:hover{text-decoration:none;}
+  .wordmark img{width:26px;height:26px;}
+  .nav-links{display:flex;gap:28px;align-items:center;}
+  .nav-links a{
+    color:var(--ink-soft);font-size:14px;
+    font-weight:500;text-decoration:none;
+  }
+  .nav-links a:hover{color:var(--ink);text-decoration:none;}
+  .nav-links a.btn{color:#fff;}
+
+  /* BUTTONS */
+  .btn{
+    display:inline-block;background:var(--accent);color:#fff;
+    padding:11px 20px;border-radius:var(--radius);
+    font-weight:500;font-size:14px;text-decoration:none;
+    transition:background .12s ease, transform .12s ease;
+    border:none;cursor:pointer;font-family:var(--font);
+    box-shadow:0 1px 2px rgba(50,50,93,.1);
+    white-space:nowrap;
+  }
+  .btn:hover{background:var(--accent-hover);text-decoration:none;}
+  .btn:active{transform:translateY(1px);}
+  .btn-lg{font-size:16px;padding:15px 28px;}
+  .btn.ghost{
+    background:#fff;color:var(--ink);
+    border:1px solid var(--line-strong);box-shadow:none;
+  }
+  .btn.ghost:hover{background:var(--bg);border-color:var(--ink-mute);color:var(--ink);}
+
+  /* HERO */
+  .hero{
+    padding:120px 0 120px;text-align:center;
+    background:linear-gradient(180deg, var(--bg) 0%, #ffffff 100%);
+  }
+  .hero h1{
+    font-size:clamp(40px, 7vw, 84px);
+    font-weight:600;line-height:1.04;
+    letter-spacing:-.025em;
+    margin:0 auto 28px;max-width:14em;
+  }
+  .hero h1 em{font-style:normal;color:var(--accent);}
+  .hero .claim{
+    font-size:clamp(17px, 1.6vw, 21px);
+    line-height:1.5;color:var(--ink-soft);
+    max-width:36em;margin:0 auto 40px;
+  }
+  .hero .cta-row{
+    display:flex;gap:14px;justify-content:center;flex-wrap:wrap;
+  }
+  .hero .micro{
+    font-size:13px;color:var(--ink-mute);margin-top:24px;
+    letter-spacing:.02em;
+  }
+
+  /* DEMO */
+  .demo{padding:0 0 120px;background:#fff;}
+  .demo-frame{
+    background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);
+    overflow:hidden;max-width:1000px;margin:0 auto;
+  }
+  .demo-frame video, .demo-frame img{display:block;width:100%;height:auto;}
+  .demo-placeholder{
+    aspect-ratio:16/10;background:var(--bg-soft);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--ink-mute);font-size:13px;
+  }
+
+  /* SECTIONS */
+  section{padding:120px 0;}
+  .bg-soft{background:var(--bg);}
+  .section-head{
+    max-width:680px;margin:0 0 56px;
+  }
+  .section-head.center{text-align:center;margin-left:auto;margin-right:auto;}
+  .eyebrow{
+    font-size:12px;letter-spacing:.15em;text-transform:uppercase;
+    color:var(--accent);font-weight:600;margin:0 0 18px;
+  }
+  section h2{
+    font-size:clamp(30px, 3.5vw, 48px);
+    font-weight:600;letter-spacing:-.02em;
+    line-height:1.1;margin:0 0 20px;max-width:18ch;
+  }
+  .section-head.center h2{margin-left:auto;margin-right:auto;}
+  .section-head .lede{
+    font-size:clamp(16px, 1.4vw, 19px);
+    color:var(--ink-soft);line-height:1.55;
+    margin:0;max-width:34em;
+  }
+  .section-head.center .lede{margin-left:auto;margin-right:auto;}
+
+  /* STEPS */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+  .step{
+    background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius-lg);padding:32px;
+    transition:border-color .15s ease, transform .15s ease;
+  }
+  .step:hover{border-color:var(--line-strong);transform:translateY(-2px);}
+  .step .n{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:32px;height:32px;border-radius:50%;
+    background:var(--accent-soft);color:var(--accent);
+    font-size:13px;font-weight:600;margin-bottom:20px;
+    font-variant-numeric:tabular-nums;
+  }
+  .step h3{font-size:18px;font-weight:600;margin:0 0 10px;letter-spacing:-.005em;}
+  .step p{font-size:15px;color:var(--ink-soft);margin:0;line-height:1.6;}
+
+  /* BENEFITS */
+  .benefits{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+  .benefit{
+    background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius-lg);padding:32px;
+  }
+  .benefit-icon{
+    width:40px;height:40px;border-radius:10px;
+    background:var(--accent-soft);color:var(--accent);
+    display:flex;align-items:center;justify-content:center;
+    margin-bottom:20px;
+  }
+  .benefit-icon svg{width:20px;height:20px;}
+  .benefit h3{font-size:17px;font-weight:600;margin:0 0 8px;letter-spacing:-.005em;}
+  .benefit p{font-size:15px;color:var(--ink-soft);margin:0;line-height:1.55;}
+
+  /* AUTHOR */
+  .author{
+    background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius-lg);padding:48px;
+  }
+  .author p{font-size:17px;color:var(--ink-soft);margin:0 0 18px;line-height:1.65;}
+  .author p:last-child{margin-bottom:0;}
+  .author strong{color:var(--ink);font-weight:600;}
+
+  /* FAQ */
+  .faq{display:grid;gap:12px;}
+  .faq details{
+    background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius);padding:22px 26px;
+    transition:border-color .15s ease;
+  }
+  .faq details:hover{border-color:var(--line-strong);}
+  .faq details[open]{border-color:var(--accent);}
+  .faq summary{
+    font-weight:600;font-size:16px;cursor:pointer;
+    list-style:none;position:relative;padding-right:32px;
+    color:var(--ink);letter-spacing:-.005em;
+  }
+  .faq summary::-webkit-details-marker{display:none;}
+  .faq summary::after{
+    content:"+";position:absolute;right:0;top:-4px;
+    color:var(--ink-mute);font-size:24px;font-weight:300;
+    line-height:1;transition:transform .15s ease;
+  }
+  .faq details[open] summary::after{content:"−";color:var(--accent);}
+  .faq details > p{
+    margin:14px 0 0;color:var(--ink-soft);
+    font-size:15px;line-height:1.65;
+  }
+  .faq code{
+    background:var(--bg);padding:2px 6px;border-radius:4px;
+    font-size:13px;color:var(--ink);font-family:"SF Mono","Menlo",monospace;
+  }
+
+  /* CTA */
+  .cta-section{padding:80px 0 120px;background:var(--bg);}
+  .cta{
+    background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius-lg);padding:72px 40px;
+    text-align:center;box-shadow:var(--shadow);max-width:880px;
+    margin:0 auto;
+  }
+  .cta h2{margin:0 auto 14px;max-width:none;}
+  .cta p.lede{
+    color:var(--ink-soft);margin:0 auto 32px;
+    font-size:17px;max-width:34em;
+  }
+  .cta-buttons{
+    display:flex;gap:14px;justify-content:center;flex-wrap:wrap;
+  }
+  .cta .micro{font-size:13px;color:var(--ink-mute);margin-top:24px;}
+
+  /* FOOTER */
+  footer{
+    background:#fff;border-top:1px solid var(--line);
+    padding:48px 0;text-align:center;
+    font-size:13px;color:var(--ink-mute);
+  }
+  footer a{color:var(--ink-soft);}
+  footer a:hover{color:var(--accent);}
+  .socials{
+    display:flex;gap:14px;justify-content:center;margin-bottom:24px;
+  }
+  .socials a{
+    display:inline-flex;width:38px;height:38px;
+    align-items:center;justify-content:center;
+    border:1px solid var(--line);border-radius:8px;
+    color:var(--ink-soft);transition:all .12s ease;
+  }
+  .socials a:hover{
+    border-color:var(--accent);color:var(--accent);
+    text-decoration:none;background:var(--accent-soft);
+  }
+  .socials svg{width:16px;height:16px;}
+  footer p{margin:8px 0;}
+
+  /* RESPONSIVE */
+  @media (max-width:900px){
+    .nav-links a:not(.btn){display:none;}
+    section{padding:80px 0;}
+    .hero{padding:72px 0 80px;}
+    .steps, .benefits{grid-template-columns:1fr;}
+    .cta{padding:48px 28px;}
+    .author{padding:32px;}
+    .container, .nav-inner{padding-left:20px;padding-right:20px;}
+  }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a class="wordmark" href="#top">
+      <img src="assets/icon.svg" alt="" />
+      <span>VECTORIZATOR</span>
+    </a>
+    <div class="nav-links">
+      <a href="#como-funciona">Cómo funciona</a>
+      <a href="#por-que">Por qué local</a>
+      <a href="#faq">FAQ</a>
+      <a class="btn" href="#descargar">Descargar</a>
+    </div>
+  </div>
+</header>
+
+<section class="hero" id="top">
+  <div class="container">
+    <h1>Convierte el texto de tu PDF<br/>en <em>curvas</em>.</h1>
+    <p class="claim">Vectoriza tipografías sin necesidad de tener las fuentes instaladas. Una herramienta de Mac para diseñadores que valoran la velocidad y el control sobre su material.</p>
+    <div class="cta-row">
+      <a class="btn btn-lg" href="#descargar">Descargar gratis para Mac</a>
+      <a class="btn btn-lg ghost" href="#como-funciona">Ver cómo funciona</a>
+    </div>
+    <p class="micro">Apple Silicon · macOS 11 o superior · Sin registro · Sin tracking</p>
+  </div>
+</section>
+
+<section class="demo">
+  <div class="container">
+    <div class="demo-frame">
+      <video autoplay loop muted playsinline preload="auto">
+        <source src="assets/demo.m4v" type="video/mp4" />
+        Tu navegador no soporta vídeo HTML5.
+      </video>
+    </div>
+  </div>
+</section>
+
+<section class="bg-soft" id="como-funciona">
+  <div class="container">
+    <div class="section-head">
+      <p class="eyebrow">Flujo</p>
+      <h2>Tres pasos, sin curva de aprendizaje.</h2>
+      <p class="lede">Pensado para no interrumpir tu trabajo: arrastras, esperas un par de segundos, y sigues. No hay menús, no hay configuración.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="n">01</div>
+        <h3>Suelta el PDF</h3>
+        <p>Arrastra el archivo a la ventana o haz clic para elegirlo. Hasta 20 MB por documento.</p>
+      </div>
+      <div class="step">
+        <div class="n">02</div>
+        <h3>Vectoriza</h3>
+        <p>Vectorizator convierte cada glifo de texto en curvas usando Ghostscript. El resto del documento queda intacto.</p>
+      </div>
+      <div class="step">
+        <div class="n">03</div>
+        <h3>Abre y edita</h3>
+        <p>Lleva el resultado a Illustrator y trabaja como con cualquier vectorial, sin necesitar las fuentes originales.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="por-que">
+  <div class="container">
+    <div class="section-head">
+      <p class="eyebrow">Por qué local</p>
+      <h2>Tu material nunca sale del Mac.</h2>
+      <p class="lede">Si trabajas con propuestas de cliente, identidades en curso o material confidencial, la nube no es opción. Vectorizator es una app de escritorio, no un servicio.</p>
+    </div>
+    <div class="benefits">
+      <div class="benefit">
+        <div class="benefit-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h3>Sin subidas a servidores</h3>
+        <p>El PDF se procesa en tu disco, no en la nube. Cero copia en remoto.</p>
+      </div>
+      <div class="benefit">
+        <div class="benefit-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.58 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+        </div>
+        <h3>Funciona offline</h3>
+        <p>Una vez instalada, no necesita conexión. Trabaja en avión o desconectado a propósito.</p>
+      </div>
+      <div class="benefit">
+        <div class="benefit-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        </div>
+        <h3>Sin colas ni caídas</h3>
+        <p>No depende de un servidor saturado o caído. Tu Mac es el único cuello de botella.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="bg-soft" id="autor">
+  <div class="container narrow">
+    <div class="section-head">
+      <p class="eyebrow">Acerca del autor</p>
+      <h2>¿Quién hay detrás?</h2>
+    </div>
+    <div class="author">
+      <!-- TODO: reescribe esto a tu gusto. -->
+      <p>Soy <strong>Hugo Tobío</strong>, diseñador con base en España. Llevo años trabajando entre la dirección de arte y la construcción de pequeñas herramientas que resuelven a mí — y a otros como yo — problemas concretos del día a día del estudio.</p>
+      <p>Vectorizator nació de una situación familiar: abrir un PDF de un cliente y descubrir que faltan las fuentes. La solución técnica existía (Ghostscript), pero no era accesible para alguien que solo quiere arrastrar un archivo y seguir trabajando. Esta app es ese atajo.</p>
+      <p>Si te ha resultado útil, considera <a href="#descargar">apoyar el proyecto</a> o compartirlo con otro diseñador. Y si quieres ver qué más hago, pásate por <a href="https://hugotobio.com" target="_blank" rel="noopener">hugotobio.com</a>.</p>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="container narrow">
+    <div class="section-head">
+      <p class="eyebrow">FAQ</p>
+      <h2>Preguntas frecuentes.</h2>
+    </div>
+    <div class="faq">
+      <details>
+        <summary>¿En qué Macs funciona?</summary>
+        <p>Macs con Apple Silicon (M1, M2, M3, M4 y posteriores) con macOS 11 Big Sur o superior. No hay versión para Macs Intel ni para Windows.</p>
+      </details>
+      <details>
+        <summary>¿Cuál es el tamaño máximo de PDF que puedo procesar?</summary>
+        <p>20 MB por documento, suficiente para la mayoría de PDFs de diseño. Si necesitas algo más grande, escríbeme y lo valoramos.</p>
+      </details>
+      <details>
+        <summary>¿Funciona con cualquier fuente?</summary>
+        <p>Sí. La app no necesita tener instaladas las fuentes originales del PDF. Convierte el texto en curvas tal como aparece visualmente. Eso sí, una vez convertido pierdes la posibilidad de editar el texto como texto — a cambio ganas libertad para mover, escalar, recolorear y aplicar efectos sin que la tipografía se rompa.</p>
+      </details>
+      <details>
+        <summary>¿Por qué macOS me avisa al abrirla por primera vez?</summary>
+        <p>Porque la app no está firmada con cuenta de Apple Developer (99 €/año que de momento no asumo). La primera vez tienes que ir a <strong>Ajustes del Sistema → Privacidad y seguridad → Abrir igualmente</strong>. A partir de ahí se abre sin avisos. El código estará disponible para auditar.</p>
+      </details>
+      <details>
+        <summary>¿Es gratis para siempre?</summary>
+        <p>Sí. Esta versión es gratuita y sin límites de uso. Si te resulta útil, considera donar. Si en el futuro añado funciones avanzadas (procesado por lotes, integración con el Finder, etc.) podrían formar parte de una versión Pro de pago — pero lo que ya tienes seguirá funcionando.</p>
+      </details>
+      <details>
+        <summary>¿Qué hace exactamente con mi PDF?</summary>
+        <p>Internamente usa Ghostscript con la opción <code>-dNoOutputFonts</code>, que reescribe el PDF convirtiendo cada glifo de texto en una curva vectorial. El resultado es visualmente idéntico pero sin dependencias de fuentes.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section id="descargar" class="cta-section">
+  <div class="container">
+    <div class="cta">
+      <p class="eyebrow" style="margin-bottom:14px;">Descarga</p>
+      <h2>Empieza a vectorizar en 60 segundos.</h2>
+      <p class="lede">Versión 1.0 — gratis para Mac con Apple Silicon. Si te resulta útil, considera apoyar el proyecto con una donación.</p>
+      <div class="cta-buttons">
+        <!-- TODO: sustituye por la URL del .dmg en GitHub Releases. -->
+        <a class="btn btn-lg" href="https://github.com/HugoTobio/Vectorizator/releases/download/v1.0.0/Vectorizator-1.0.0-arm64.dmg" download>Descargar para Mac (.dmg)</a>
+        <!-- TODO: sustituye por tu enlace de PayPal donate o paypal.me. -->
+        <a class="btn btn-lg ghost" href="https://paypal.me/hugotobio/5EUR" target="_blank" rel="noopener">Invítame a un par de cafés (5 €)</a>
+      </div>
+      <p class="micro">Sin registro · Sin tracking · Tu PDF nunca sale del Mac</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="socials">
+      <!-- TODO: sustituye los href por tus perfiles reales. Borra los iconos que no uses. -->
+      <a href="https://x.com/TU_USUARIO" target="_blank" rel="noopener" aria-label="X / Twitter">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2H21l-6.516 7.448L22 22h-6.844l-4.768-6.234L4.8 22H2l7.02-8.026L2 2h6.914l4.288 5.66L18.244 2zm-2.4 18h1.665L7.252 4h-1.79l10.382 16z"/></svg>
+      </a>
+      <a href="https://instagram.com/TU_USUARIO" target="_blank" rel="noopener" aria-label="Instagram">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>
+      </a>
+      <a href="https://linkedin.com/in/TU_USUARIO" target="_blank" rel="noopener" aria-label="LinkedIn">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5C4.98 4.88 3.87 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1s2.48 1.12 2.48 2.5zM.22 8h4.56v14H.22V8zm7.5 0h4.36v1.92h.06c.61-1.15 2.1-2.36 4.33-2.36 4.62 0 5.47 3.04 5.47 7v7.44h-4.55v-6.6c0-1.57-.03-3.6-2.19-3.6-2.19 0-2.52 1.71-2.52 3.48V22h-4.55V8z"/></svg>
+      </a>
+      <a href="https://github.com/HugoTobio" target="_blank" rel="noopener" aria-label="GitHub">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.7 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"/></svg>
+      </a>
+    </div>
+    <!-- TODO: sustituye el email por el real. -->
+    <p>Sugerencias y feedback: <a href="mailto:hola@vectorizator.com">hola@vectorizator.com</a></p>
+    <p>© 2026 Hugo Tobío · Hecho con cariño en España</p>
+  </div>
+</footer>
+
+</body>
+</html>
