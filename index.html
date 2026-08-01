@@ -481,5 +481,22 @@
   </div>
 </footer>
 
+<script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
+<script>
+  document.querySelectorAll('#descargar a.btn.btn-lg').forEach(function (link) {
+    var eventName = link.href.includes('.dmg') ? 'download_dmg'
+      : link.href.includes('paypal.me') ? 'paypal_click'
+      : null;
+    if (!eventName) return;
+    link.addEventListener('click', function () {
+      if (window.va) {
+        window.va('event', { name: eventName });
+      }
+    });
+  });
+</script>
 </body>
 </html>
